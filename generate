@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e -o pipefail
+
+dir=$(printf day%02d $1)
+
+mkdir "$dir"
+touch "$dir/input.txt"
+cat > "$dir/main.py" <<-EOF
+import fileinput
+
+
+if __name__ == "__main__":
+    lines = fileinput.input()
+EOF
