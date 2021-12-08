@@ -1,3 +1,4 @@
+import collections
 import fileinput
 import itertools
 
@@ -6,62 +7,57 @@ def sort_word(word):
     return "".join(sorted(word))
 
 
-def filter_len(values, size):
-    if isinstance(size, int):
-        size = [size]
-    return filter(lambda d: len(d) in size, values)
+def part2(lines):
+    """
+    Analyzing all the possible numbers we get:
 
+           a   b   c   d   e   f   g
+    -----------------------------------
+      0:   x   x   x       x   x   x
+      1:           x           x
+      2:   x       x   x   x       x
+      3:   x       x   x       x   x
+      4:       x   x   x       x
+      5:   x   x       x       x   x
+      6:   x   x       x   x   x   x
+      7:   x       x           x
+      8:   x   x   x   x   x   x   x
+      9:   x   x   x   x       x   x
+    -----------------------------------
+      r:   8   6   8   7   4   9   7    <- how many times each character is present
 
-def solve_letters(values):
-    by_len = {
-        l: list(vs) for l, vs in itertools.groupby(sorted(values, key=len), key=len)
+    If we assign each character to the value of r above, we find that each number
+    can be uniquely represented by the sum of those values:
+
+     0: abcefg = 8+6+8+4+9+7 = 42
+     1: cf     = 8+9         = 17
+     ... and so on
+    """
+
+    def decode(wires, output):
+        counter = collections.Counter(itertools.chain(*wires))
+
+        number = 0
+        for digits in output:
+            number = number * 10 + mapping[sum(counter[c] for c in digits)]
+        return number
+
+    correct = {
+        0: "abcefg",
+        1: "cf",
+        2: "acdeg",
+        3: "acdfg",
+        4: "bcdf",
+        5: "abdfg",
+        6: "abdefg",
+        7: "acf",
+        8: "abcdefg",
+        9: "abcdfg",
     }
-    # 1
-    cf = set(by_len[2][0])
-    # 7
-    acf = set(by_len[3][0])
+    counter = collections.Counter(itertools.chain(*correct.values()))
+    mapping = {sum(counter[d] for d in digits): num for num, digits in correct.items()}
 
-    a = acf - cf
-
-    # 6
-    abdefg = set(next(v for v in by_len[6] if not cf.issubset(v)))
-    c = acf - abdefg
-    f = cf - c
-
-    adg = set(by_len[5][0]).intersection(*by_len[5])
-
-    # 9
-    abcdfg = set(next(v for v in by_len[6] if set(v) != abdefg and adg < set(v)))
-    b = abcdfg - adg - acf
-
-    # 4
-    bcdf = set(by_len[4][0])
-    d = bcdf - cf - b
-    g = adg - a - d
-
-    e = abdefg - adg - b - f
-
-    return tuple(map(lambda c: list(c)[0], (a, b, c, d, e, f, g)))
-
-
-def solve(wires, output):
-    a, b, c, d, e, f, g = solve_letters(set(wires))
-    numbers = {
-        sort_word(a + b + c + e + f + g): 0,
-        sort_word(c + f): 1,
-        sort_word(a + c + d + e + g): 2,
-        sort_word(a + c + d + f + g): 3,
-        sort_word(b + c + d + f): 4,
-        sort_word(a + b + d + f + g): 5,
-        sort_word(a + b + d + e + f + g): 6,
-        sort_word(a + c + f): 7,
-        "abcdefg": 8,
-        sort_word(a + b + c + d + f + g): 9,
-    }
-    result = 0
-    for number in output:
-        result = result * 10 + numbers[number]
-    return result
+    return sum(decode(*l) for l in lines)
 
 
 if __name__ == "__main__":
@@ -73,4 +69,4 @@ if __name__ == "__main__":
     lines = [parse(l) for l in fileinput.input()]
 
     print("Part 1:", sum(len(v) in (2, 3, 4, 7) for _, output in lines for v in output))
-    print("Part 2:", sum(solve(*l) for l in lines))
+    print("Part 2:", part2(lines))
