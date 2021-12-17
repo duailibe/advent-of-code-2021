@@ -13,6 +13,10 @@ def valid(v, target):
         if x_lo <= x <= x_hi and y_lo <= y <= y_hi:
             return True
 
+        # return early if:
+        #   - x stopped short
+        #   - x overshoot
+        #   - y overshoot on descent
         if (vx == 0 and x < x_lo) or x > x_hi or (vy < 0 and y < y_lo):
             return False
 
